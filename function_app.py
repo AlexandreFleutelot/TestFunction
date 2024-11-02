@@ -3,7 +3,6 @@ from rag_services.chunking import create_chunks
 from rag_services.storage import ChunkStore
 from rag_services.models import Chunk
 
-from dotenv import load_dotenv
 
 import azure.functions as func
 
@@ -11,29 +10,14 @@ import os
 import logging
 import json
 
-load_dotenv()
+#from dotenv import load_dotenv
+#load_dotenv()
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.FUNCTION)
 
 # Initialize services lazily to avoid cold start issues
 embedding_service = None
 chunk_store = None
-
-def get_embedding_services():
-    global embedding_service
-    if embedding_service is None:
-        embedding_service = EmbeddingService()
-    return embedding_service
-
-def get_chunk_store():
-    global chunk_store
-    if chunk_store is None:
-        chunk_store = ChunkStore(
-            connection_string=os.getenv("COSMOS_CONNECTION_STRING"),
-            database_name=os.getenv("COSMOS_DATABASE_NAME"),
-            container_name=os.getenv("COSMOS_CONTAINER_NAME")
-        )
-    return chunk_store
 
 @app.route(route="ingest_txt", methods=["POST"])
 def ingest_txt(req: func.HttpRequest) -> func.HttpResponse:
@@ -107,3 +91,19 @@ def retrieve_chunks(req: func.HttpRequest) -> func.HttpResponse:
     except Exception as e:
         logging.error(f"Error retrieving chunks: {str(e)}")
         return func.HttpResponse("An error occurred while retrieving the chunks.", status_code=500)
+    
+def get_embedding_services():
+    global embedding_service
+    if embedding_service is None:
+        embedding_service = EmbeddingService()
+    return embedding_service
+
+def get_chunk_store():
+    global chunk_store
+    if chunk_store is None:
+        chunk_store = ChunkStore(
+            connection_string=os.getenv("COSMOS_CONNECTION_STRING"),
+            database_name=os.getenv("COSMOS_DATABASE_NAME"),
+            container_name=os.getenv("COSMOS_CONTAINER_NAME")
+        )
+    return chunk_store
